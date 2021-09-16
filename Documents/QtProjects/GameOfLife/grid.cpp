@@ -17,8 +17,7 @@ Grid::Grid(QWidget *parent) :
    setTransparency();
    setTimer();
    makeGrid();
-   timer->start();
-   connect(timer, SIGNAL(timeout), this, SLOT(evolve()));
+   //connect(timer, SIGNAL(timeout), this, SLOT(evolve()));
 
 
    //evolve();
@@ -155,3 +154,11 @@ void Grid::setTimer()
     timer->setInterval(300);
     //connect(timer, SIGNAL(timeout()), this, SLOT(evolve()));
 }
+
+void Grid::on_startPushButton_clicked()
+{
+    timer->start();
+    connect(ui->startPushButton, SIGNAL(clicked()), this, SLOT(evolve()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(evolve()));
+}
+
