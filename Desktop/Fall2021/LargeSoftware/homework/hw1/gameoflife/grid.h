@@ -33,7 +33,7 @@ public slots:
     void setCellSize(const int& size);
     void setColor(const QColor& color);
     void makeGrid();
-    void deleteGrid();
+    void deleteGrid(int ** gridd);
     void setTimer(int time);
 
 private:
@@ -43,9 +43,9 @@ private:
     int getCellSize() const;
 
     int** grid;
+    int** past_grid;
     std::mt19937 randNumber;
     std::uniform_int_distribution<int> randomDistribution;
-
     int initialCellState();
     int rowCount = 50;
     int columnCount = 50;
@@ -76,6 +76,7 @@ private:
     int dotsCount = 0;
     std::vector<bool> newDot;
     int newDotsCount = 0;
+    int newBlanksCount = 0;
 
     Stats * stat;
 
@@ -83,8 +84,10 @@ private:
     float calcPctFill();
     int calcNewDots();
     int calcNewBlanks();
+    void copyGrid();
 
     std::vector<int> dotsHist;
+    std::vector<int**> grid_hist;
 
 private slots:
      void evolve();

@@ -6,6 +6,7 @@
 #include <QMouseEvent>
 #include <QTimer>
 #include <iostream>
+#include <algorithm>
 
 Grid::Grid(Stats * stats, int time, QWidget *parent) :
     QDialog(parent),
@@ -55,13 +56,13 @@ int Grid::initialCellState()
     return (random <= 5) ? 0 : 1;
 }
 
-void Grid::deleteGrid()
+void Grid::deleteGrid(int ** gridd)
 {
     for (int i = 0; i < rowCount; i++)
         {
-            delete[] grid[i];
+            delete[] gridd[i];
         }
-        delete[] grid;
+        delete[] gridd;
 }
 
 void Grid::setGameSize(const int& size)
@@ -160,17 +161,31 @@ void Grid::setTransparency()
     cellColor.setAlpha(255);
 }
 
+void Grid::copyGrid()
+{
+    past_grid = new int*[rowCount];
+
+    for (int i = 0; i < rowCount; i++){
+        past_grid[i] = new int[columnCount];
+        for (int j = 0; j < columnCount; j++){
+            past_grid[i][j] = grid[i][j];
+        }
+    }
+}
+
 void Grid::evolve()
 {
     cycle++;
+    copyGrid();
     evolveNextGeneration(grid, rowCount, columnCount);
     update();
+    grid_hist.push_back(grid);
     stat->setCycleInfo(this->getCycle());
     stat->setDotsCount(this->calcDots());
     float fill = this->calcPctFill();
     stat->setPctFill(fill);
     stat->setNewDotsCount(this->calcNewDots());
-
+    stat->setBlanksCount(this->calcNewBlanks());
 }
 
 void Grid::setCycle(int cyc)
@@ -198,7 +213,7 @@ void Grid::closeEvent(QCloseEvent *)
 void Grid::resetGrid()
 {
     timer->stop();
-    deleteGrid();
+    deleteGrid(grid);
     makeGrid();
     update();
 }
@@ -238,19 +253,19 @@ float Grid::calcPctFill()
 
 int Grid::calcNewDots()
 {
+    newDotsCount = 0;
     if (dotsHist.size() == 1){
-        newDot.push_back(false);
+        return this->calcDots();
     }
 
-        //return dotsHist[dotsHist.size() - 1] - dotsHist[dotsHist.size() - 2];
         for (int rowIdx = 0; rowIdx < rowCount; rowIdx++)
                {
                    for (int columnIdx = 0; columnIdx < columnCount; columnIdx++)
                    {
-                       if (grid[rowIdx][columnIdx] == 1 && !newDot[rowCount * columnCount])
+                       if (grid[rowIdx][columnIdx] == 1 &&
+                               past_grid[rowIdx][columnIdx] == 0)
                        {
                            newDotsCount++;
-                           newDot.push_back(true);
                        }
                    }
                }
@@ -259,5 +274,21 @@ int Grid::calcNewDots()
 
 int Grid::calcNewBlanks()
 {
+    newBlanksCount = 0;
+    if (dotsHist.size() == 1){
+        return (rowCount * columnCount) - this->calcDots();
+    }
 
+        for (int rowIdx = 0; rowIdx < rowCount; rowIdx++)
+               {
+                   for (int columnIdx = 0; columnIdx < columnCount; columnIdx++)
+                   {
+                       if (grid[rowIdx][columnIdx] == 0 &&
+                               past_grid[rowIdx][columnIdx] == 1)
+                       {
+                           newBlanksCount++;
+                       }
+                   }
+               }
+    return newBlanksCount;
 }
